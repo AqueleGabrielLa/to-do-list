@@ -1,30 +1,22 @@
 const pool = require("../utils/db");
 const handleError = require("../utils/handleError");
+const { sendErrorResponse, sendSuccessResponse } = require("../utils/response");
 
 const createTask = async (req, res) => {
     try {
         const { title, description, statusTask, dueDate, categoryId } = req.body;
 
         if (!title) {
-            return res.status(400).json({
-                success: false,
-                message: 'Dados insuficientes, favor preencher título'
-            });
+            return sendErrorResponse(res, 400, 'Dados insuficientes, favor preencher título')
         }
 
         const validStatus = ['pending', 'in_progress', 'done'];
         if (statusTask && !validStatus.includes(statusTask)) {
-            return res.status(400).json({
-                success: false,
-                message: 'Status inválido, Valores válidos: pending, in_progress, completed'
-            });
+            return sendErrorResponse(res, 400, 'Status inválido, Valores válidos: pending, in_progress, completed')
         }
 
         if (dueDate && isNaN(Date.parse(dueDate))) {
-            return res.status(400).json({
-                success: false,
-                message: 'Data de vencimento inválida. Por favor, insira uma data válida no formato YYYY-MM-DD.'
-            });
+            return sendErrorResponse(res, 400, 'Data de vencimento inválida. Por favor, insira uma data válida no formato YYYY-MM-DD.')
         }
 
         const userId = req.user.id;
@@ -34,10 +26,7 @@ const createTask = async (req, res) => {
             [title, description, taskStatus, dueDate, userId, categoryId]
         );
 
-        res.status(201).json({
-            success: true,
-            message: 'Tarefa criada com sucesso'
-        });
+        sendSuccessResponse(res, 201, 'Tarefa criada com sucesso')
     } catch (error) {
         handleError(res, 'Erro ao criar tarefa', error);
     }
@@ -51,17 +40,13 @@ const getTasks = async (req, res) => {
             [userId]
         )
 
-        res.status(200).json({
-            success: true,
-            tasks: result.rows
-        })
+        sendSuccessResponse(res, 200, null, result.rows)
     } catch (error) {
         handleError(res, 'Erro ao buscar tarefas', error)
     }
 }
 
 const getTasksById = async (req, res) => {
-
     try {
         const { id } = req.params
 
@@ -70,17 +55,9 @@ const getTasksById = async (req, res) => {
             [id]
         )
 
-        if (!result.rows[0]) {
-            return res.status(404).json({
-                success: false,
-                message: 'Tarefa não encontrada'
-            })
-        }
+        if (!result.rows[0]) return sendErrorResponse(res, 404, 'Tarefa não encontrada')
 
-        res.status(200).json({
-            success: true,
-            task: result.rows[0]
-        })   
+        sendSuccessResponse(res, 200, null, result.rows[0])
     } catch (error) {
         handleError(res, 'Erro ao buscar tarefas', error)
     }
@@ -94,41 +71,20 @@ const updateTask = async (req, res) => {
             [id]
         )
 
-        if(!result.rows[0]){
-            return res.status(404).json({
-                success: false,
-                message: 'Tarefa não encontrada'
-            })
-        }
+        if(!result.rows[0]) return sendErrorResponse(res, 404, 'Tarefa não encontrada')
 
         const { title, description, status, dueDate, categoryId } = req.body
-        if (
-            title === undefined &&
-            description === undefined &&
-            status === undefined &&
-            dueDate === undefined &&
-            categoryId === undefined
-        ) {
-            console.log(status);
-            return res.status(400).json({
-                success: false,
-                message: 'Nenhum dado fornecido para atualização'
-            })
+        if(Object.keys(req.body).length === 0){
+            return sendErrorResponse(res, 400, 'Nenhum dado fornecido para atualização')
         }
 
         const validStatus = ['pending', 'in_progress', 'done']
         if(status && !validStatus.includes(status)){
-            return res.status(400).json({
-                success: false,
-                message: 'Status inválido, Valores válidos: pending, in_progress, done'
-            })
+            return sendErrorResponse(res, 400, 'Status inválido, Valores válidos: pending, in_progress, done')
         }
 
         if(dueDate && isNaN(Date.parse(dueDate))){
-            return res.status(400).json({
-                success: false,
-                message: 'Data de vencimento inválida'
-            })
+            return sendErrorResponse(res, 400, 'Data de vencimento inválida')
         }
 
         const campos = { title, description, status: status, due_date: dueDate, category_id: categoryId}
@@ -149,10 +105,7 @@ const updateTask = async (req, res) => {
         console.log(query, values)
         await pool.query(query, values)
 
-        res.status(200).json({
-            success: true,
-            message: 'Tarefa atualizada com sucesso'
-        })
+        sendSuccessResponse(res, 200, 'Tarefa atualizada com sucesso')
     } catch (error) {
         handleError(res, 'Erro ao atualizar tarefa', error)
     }
@@ -167,22 +120,14 @@ const deleteTask = async (req, res) => {
             [id]
         )
 
-        if(!result.rows[0]){
-            return res.status(404).json({
-                success: false,
-                message: 'Tarefa não encontrada'
-            })
-        }
+        if(!result.rows[0]) return sendErrorResponse(res, 404, 'Tarefa não encontrada')
 
         await pool.query(
             'DELETE FROM tasks WHERE id = $1',
             [id]
         )
 
-        res.status(200).json({
-            success: true,
-            message: 'Tarefa deletada com sucesso'
-        })   
+        sendSuccessResponse(res, 200, 'Terefa deletada com sucesso')
     } catch (error) {
         handleError(res, 'Erro ao deletar tarefa', error)
     }
