@@ -1,5 +1,5 @@
 const bcrypt = require('bcrypt')
-const pool = require('../utils/db')
+const pool = require('../config/db')
 const jwt = require('jsonwebtoken')
 const handleError = require('../utils/handleError')
 const { sendSuccessResponse, sendErrorResponse } = require('../utils/response')

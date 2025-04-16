@@ -1,4 +1,4 @@
-const pool = require("../utils/db");
+const pool = require("../config/db");
 const handleError = require("../utils/handleError");
 const { sendErrorResponse, sendSuccessResponse } = require("../utils/response");
 const validateTaskInput = require("../utils/validateTaskInput");
