@@ -1,23 +1,14 @@
 const pool = require("../utils/db");
 const handleError = require("../utils/handleError");
 const { sendErrorResponse, sendSuccessResponse } = require("../utils/response");
+const validateTaskInput = require("../utils/validateTaskInput");
 
 const createTask = async (req, res) => {
     try {
         const { title, description, statusTask, dueDate, categoryId } = req.body;
 
-        if (!title) {
-            return sendErrorResponse(res, 400, 'Dados insuficientes, favor preencher título')
-        }
-
-        const validStatus = ['pending', 'in_progress', 'done'];
-        if (statusTask && !validStatus.includes(statusTask)) {
-            return sendErrorResponse(res, 400, 'Status inválido, Valores válidos: pending, in_progress, completed')
-        }
-
-        if (dueDate && isNaN(Date.parse(dueDate))) {
-            return sendErrorResponse(res, 400, 'Data de vencimento inválida. Por favor, insira uma data válida no formato YYYY-MM-DD.')
-        }
+        const error = validateTaskInput(res, { title, statusTask, dueDate })
+        if(error) return
 
         const userId = req.user.id;
         const taskStatus = statusTask || 'pending'
@@ -78,14 +69,8 @@ const updateTask = async (req, res) => {
             return sendErrorResponse(res, 400, 'Nenhum dado fornecido para atualização')
         }
 
-        const validStatus = ['pending', 'in_progress', 'done']
-        if(status && !validStatus.includes(status)){
-            return sendErrorResponse(res, 400, 'Status inválido, Valores válidos: pending, in_progress, done')
-        }
-
-        if(dueDate && isNaN(Date.parse(dueDate))){
-            return sendErrorResponse(res, 400, 'Data de vencimento inválida')
-        }
+        const error = validateTaskInput(res, { title, status, dueDate}, true)
+        if(error) return
 
         const campos = { title, description, status: status, due_date: dueDate, category_id: categoryId}
         const fields = []
