@@ -7,6 +7,16 @@ const pool = new Pool({
 
 async function setup() {
     try {
+
+        await pool.query(`
+            DO $$
+            BEGIN
+                IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'task_status') THEN
+                    CREATE TYPE task_status AS ENUM ('pending', 'in_progress', 'done');
+                END IF;
+            END$$;
+        `);
+
         await pool.query(`
             CREATE TABLE IF NOT EXISTS users (
                 id SERIAL PRIMARY KEY,
@@ -29,11 +39,11 @@ async function setup() {
                 id SERIAL PRIMARY KEY,
                 title TEXT NOT NULL,
                 description TEXT,
-                status TEXT DEFAULT 'pending',
+                status task_status DEFAULT 'pending',
                 due_date DATE,
                 user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
                 category_id INTEGER REFERENCES categories(id)
-            );    
+            );
         `);
 
         console.log('Tabelas criadas com sucesso');
