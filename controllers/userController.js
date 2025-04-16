@@ -1,6 +1,7 @@
 const bcrypt = require('bcrypt')
 const pool = require('../utils/db')
 const jwt = require('jsonwebtoken')
+const handleError = require('../utils/handleError')
     
 const register = async (req, res) => {
     try {
@@ -26,12 +27,7 @@ const register = async (req, res) => {
         })
         
     } catch (error) {
-        console.error("Erro ao registrar usário", error);
-        res.status(500).json({
-            success: false,
-            message: 'Erro ao criar usuário',
-            error: error.message
-        })
+        handleError(res, 'Erro ao registrar usuário', error)
     }
 }
 
@@ -69,12 +65,7 @@ const login = async (req, res) => {
         }
 
     } catch (error) {
-        console.error("Erro ao acessar usuário", error);
-        res.status(500).json({
-            success: false,
-            message: 'Erro ao acessar usuário',
-            error: error.message
-        })
+        handleError(res, 'Erro ao acessar usuário, error')
     }
 }
 

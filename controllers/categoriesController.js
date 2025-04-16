@@ -1,4 +1,5 @@
 const pool = require("../utils/db")
+const handleError = require("../utils/handleError")
 
 const getCategories = async (req, res) => {
     try {
@@ -14,12 +15,7 @@ const getCategories = async (req, res) => {
             categories: result.rows
         })
     } catch (error) {
-        console.error('Erro ao buscar categorias', error);
-        res.status(500).json({
-            success: false,
-            message: 'Erro ao buscar categorias',
-            error: error.message
-        })
+        handleError(res, 'Errp ap buscar categorias', error)
     }
 }
 
@@ -43,12 +39,7 @@ const createCategory = async (req, res) => {
             message: 'Categoria adicionada'
         })
     } catch (error) {
-        console.error('Erro ao criar categoria', error);
-        res.status(500).json({
-            success: false,
-            message: 'Erro ao criar categoria',
-            error: error.message
-        })
+        handleError(res, 'Erro ao criar categoria', error)
     }
 }
 
@@ -74,12 +65,7 @@ const updateCategory = async (req, res) => {
             message: 'categoria atualizada'
         })
     } catch (error) {
-        console.error('Erro ao atualizar categoria', error);
-        res.status(500).json({
-            success: false,
-            message: 'Erro ao atualizar categoria',
-            error: error.message
-        })
+        handleError(res, 'Erro ao atualizar categoria', error)
     }
 }
 
@@ -108,12 +94,7 @@ const deleteCategory = async (req, res) => {
             message: 'categoria deletada com sucesso'
         })
     } catch (error) {
-        console.error('Erro ao deletar categoria', error);
-        res.status(500).json({
-            success: false,
-            message: 'Erro ao deletar categoria',
-            error: error.message
-        })
+        handleError(res, 'Erro ao deletear categoria', error)
     }
 }
 
