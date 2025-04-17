@@ -6,8 +6,8 @@ const authenticate = require('../middlewares/auth')
 router.use(authenticate)
 
 router.get('/', categoryController.getCategories)
-router.post('/', categoryController.createCategory)
-router.put('/:id', categoryController.updateCategory)
+router.post('/', categoryController.postCategory)
+router.put('/:id', categoryController.putCategory)
 router.delete('/:id', categoryController.deleteCategory)
 
 module.exports = router

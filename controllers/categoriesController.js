@@ -1,31 +1,26 @@
-const pool = require("../config/db")
-const handleError = require("../utils/handleError")
 const { sendSuccessResponse, sendErrorResponse } = require("../utils/response")
+const { createCategory, getAllCategories, updateCategory, delCategory } = require('../services/categoryService')
+const handleError = require("../utils/handleError")
 
-const createCategory = async (req, res) => {
+const postCategory = async (req, res) => {
     try {
         const { name } = req.body
-        if(!name) return sendErrorResponse(res, 400, 'Dados insuficientes, favor preencher nome')
-
-        await pool.query(
-            'INSERT INTO categories (name, user_id) VALUES ($1, $2)',
-            [name, req.user.id]
-        )
-
+        const userId = req.user.id
+        await createCategory({ name, userId })
+    
         sendSuccessResponse(res, 201, 'Categoria adicionada')
     } catch (error) {
-        handleError(res, 'Erro ao criar categoria', error)
+        if(error.message === 'Dados insuficientes, favor preencher nome')
+            sendErrorResponse(res, 400, error.message)
+        else 
+            handleError(res, 'Erro ao criar categoria', error)
     }
 }
 
 const getCategories = async (req, res) => {
     try {
-        const userId = req.user.id
-
-        const result = await pool.query(
-            'SELECT * FROM categories WHERE user_id = $1',
-            [userId]
-        )
+        const userId = req.user.id 
+        const result = await getAllCategories({ userId })
 
         sendSuccessResponse(res, 200, null, result.rows)
     } catch (error) {
@@ -33,48 +28,40 @@ const getCategories = async (req, res) => {
     }
 }
 
-const updateCategory = async (req, res) => {
+const putCategory = async (req, res) => {
     try {
         const id = req.params.id
         const { name } = req.body
 
-        if(!name) return sendErrorResponse(res, 400, 'nome da categoria é obrigatório')
-
-        await pool.query(
-            'UPDATE categories SET name = $1 WHERE id  = $2',
-            [name, id]
-        )
+        await updateCategory({ id, name })
 
         sendSuccessResponse(res, 200, 'Categoria atualizada')
     } catch (error) {
-        handleError(res, 'Erro ao atualizar categoria', error)
+        if(error.message === 'nome da categoria é obrigatório')
+            return sendErrorResponse(res, 400, error.message)
+        else 
+            handleError(res, 'Erro ao atualizar categoria', error)
     }
 }
 
 const deleteCategory = async (req, res) => {
     try {
         const id = req.params.id
-        const result = await pool.query(
-            'SELECT * FROM categories WHERE id = $1',
-            [id]
-        )
 
-        if(!result.rows[0]) return sendErrorResponse(res, 404, 'categoria não encontrada')
-
-        await pool.query(
-            'DELETE FROM categories WHERE id = $1',
-            [id]
-        )
+        await delCategory({ id })
 
         sendSuccessResponse(res, 200, 'Categoria deletada com sucesso')
     } catch (error) {
-        handleError(res, 'Erro ao deletear categoria', error)
+        if(error.message === 'categoria não encontrada')
+            sendErrorResponse(res, 404, 'categoria não encontrada')
+        else
+            handleError(res, 'Erro ao deletear categoria', error)
     }
 }
 
 module.exports = {
     getCategories,
-    createCategory,
-    updateCategory,
+    postCategory,
+    putCategory,
     deleteCategory
 }

@@ -1,37 +1,40 @@
-const pool = require("../config/db");
-const handleError = require("../utils/handleError");
+const { createTask, getAllTasks, getTaskById, delTask, updateTask } = require("../services/taskService");
 const { sendErrorResponse, sendSuccessResponse } = require("../utils/response");
 const validateTaskInput = require("../utils/validateTaskInput");
+const handleError = require("../utils/handleError");
 
-const createTask = async (req, res) => {
+const validateTaskErrors = new Set([
+    'Status inválido, Valores válidos: pending, in_progress, completed',
+    'Data de vencimento inválida. Por favor, insira uma data válida no formato YYYY-MM-DD.',
+    'Dados insuficientes, favor preencher título'
+])
+
+const postTask = async (req, res) => {
     try {
-        const { title, description, statusTask, dueDate, categoryId } = req.body;
+        const { title, description, status, dueDate, categoryId } = req.body;
+        const userId = req.user.id
 
-        const error = validateTaskInput(res, { title, statusTask, dueDate })
-        if(error) return
+        validateTaskInput({ title, status, dueDate })
 
-        const userId = req.user.id;
-        const taskStatus = statusTask || 'pending'
-        await pool.query(
-            "INSERT INTO tasks (title, description, status, due_date, user_id, category_id) VALUES  ($1, $2, $3::task_status, $4, $5, $6)",
-            [title, description, taskStatus, dueDate, userId, categoryId]
-        );
+        await createTask({ title, description, status, dueDate, userId, categoryId })
 
         sendSuccessResponse(res, 201, 'Tarefa criada com sucesso')
     } catch (error) {
-        handleError(res, 'Erro ao criar tarefa', error);
+        if(validateTaskErrors.has(error.message)){
+            sendErrorResponse(res, 400, error.message)
+        } else {
+            handleError(res, 'Erro ao criar tarefa', error);
+        }
     }
 }
 
 const getTasks = async (req, res) => {
     try {
         const userId = req.user.id
-        const result = await pool.query(
-            'SELECT * FROM tasks WHERE user_id = $1 ORDER BY id',
-            [userId]
-        )
 
-        sendSuccessResponse(res, 200, null, result.rows)
+        const result = await getAllTasks({ userId })
+
+        sendSuccessResponse(res, 200, undefined, result.rows)
     } catch (error) {
         handleError(res, 'Erro ao buscar tarefas', error)
     }
@@ -40,59 +43,45 @@ const getTasks = async (req, res) => {
 const getTasksById = async (req, res) => {
     try {
         const { id } = req.params
+        const task = await getTaskById({ id })
 
-        const result = await pool.query(
-            'SELECT * FROM tasks WHERE id = $1',
-            [id]
-        )
-
-        if (!result.rows[0]) return sendErrorResponse(res, 404, 'Tarefa não encontrada')
-
-        sendSuccessResponse(res, 200, null, result.rows[0])
+        sendSuccessResponse(res, 200, null, task)
     } catch (error) {
-        handleError(res, 'Erro ao buscar tarefas', error)
+        if(error.message === 'Tarefa não encontrada')
+            sendErrorResponse(res, 404, error.message)
+        else 
+            handleError(res, 'Erro ao buscar tarefas', error)
     }
 }
 
-const updateTask = async (req, res) => {
+const putTask = async (req, res) => {
     try {
         const { id } = req.params
-        const result = await pool.query(
-            'SELECT * FROM tasks WHERE id = $1',
-            [id]
-        )
+        const { title, status, dueDate} = req.body
 
-        if(!result.rows[0]) return sendErrorResponse(res, 404, 'Tarefa não encontrada')
-
-        const { title, description, status, dueDate, categoryId } = req.body
-        if(Object.keys(req.body).length === 0){
-            return sendErrorResponse(res, 400, 'Nenhum dado fornecido para atualização')
+        const bodyHasData = Object.values(req.body).some(v => v !== undefined && v !== null && v !== '')
+        if(!bodyHasData){
+            const error = new Error('Nenhum dado fornecido para atualização')
+            error.statusCode = 400
+            throw error
         }
-
-        const error = validateTaskInput(res, { title, status, dueDate}, true)
-        if(error) return
-
-        const campos = { title, description, status: status, due_date: dueDate, category_id: categoryId}
-        const fields = []
-        const values = []
-        let idx = 1
-
-        for(const [key, value] of Object.entries(campos)){
-            if(value !== undefined){
-                fields.push(`${key} = $${idx++}`)
-                values.push(value)
-            }
-        }
-
-        values.push(id)
-        const query = `UPDATE tasks SET ${fields.join(', ')} WHERE id = $${idx}`
         
-        console.log(query, values)
-        await pool.query(query, values)
+        validateTaskInput({ title, status, dueDate}, true)
+
+        await updateTask({ id }, req.body)
 
         sendSuccessResponse(res, 200, 'Tarefa atualizada com sucesso')
     } catch (error) {
-        handleError(res, 'Erro ao atualizar tarefa', error)
+        if([
+            'Tarefa não encontrada',
+            'Nenhum dado fornecido para atualização'
+        ].includes(error.message)){
+            sendErrorResponse(res, error.statusCode, error.message)
+        } else if(validateTaskErrors.has(error.message)){
+            sendErrorResponse(res, 400, error.message)
+        } else {
+            handleError(res, 'Erro ao atualizar tarefa', error)
+        }
     }
 }
 
@@ -100,28 +89,21 @@ const deleteTask = async (req, res) => {
     try {
         const { id } = req.params
 
-        const result = await pool.query(
-            'SELECT * FROM tasks WHERE id = $1',
-            [id]
-        )
+        await delTask({ id })
 
-        if(!result.rows[0]) return sendErrorResponse(res, 404, 'Tarefa não encontrada')
-
-        await pool.query(
-            'DELETE FROM tasks WHERE id = $1',
-            [id]
-        )
-
-        sendSuccessResponse(res, 200, 'Terefa deletada com sucesso')
+        sendSuccessResponse(res, 200, 'Tarefa deletada com sucesso')
     } catch (error) {
-        handleError(res, 'Erro ao deletar tarefa', error)
+        if(error.message === 'Tarefa não encontrada')
+            sendErrorResponse(res, 404, error.message)
+        else 
+            handleError(res, 'Erro ao deletar tarefa', error)
     }
 }
 
 module.exports = {
-    createTask,
+    postTask,
     getTasks,
     getTasksById,
-    updateTask,
+    putTask,
     deleteTask
 }

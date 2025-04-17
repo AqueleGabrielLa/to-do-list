@@ -1,4 +1,4 @@
-function sendSuccessResponse(res, statusCode = 200, message = 'Succes', data = {}){
+function sendSuccessResponse(res, statusCode = 200, message = 'Success', data = {}){
     return res.status(statusCode).json({
         success: true,
         message,

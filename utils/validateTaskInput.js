@@ -1,22 +1,17 @@
-const { sendErrorResponse } = require('./response')
-
 const validStatus = ['pending', 'in_progress', 'done']
 
-function validateTaskInput(res, { title, statusTask, dueDate }, isUpdate = false){
-    
-    if (statusTask && !validStatus.includes(statusTask)) {
-        return sendErrorResponse(res, 400, 'Status inválido, Valores válidos: pending, in_progress, completed')
+function validateTaskInput({ title, status, dueDate }, isUpdate = false){
+    if (status && !validStatus.includes(status)) {
+        throw new Error('Status inválido, Valores válidos: pending, in_progress, completed')
     }
 
     if (dueDate && isNaN(Date.parse(dueDate))) {
-        return sendErrorResponse(res, 400, 'Data de vencimento inválida. Por favor, insira uma data válida no formato YYYY-MM-DD.')
+        throw new Error('Data de vencimento inválida. Por favor, insira uma data válida no formato YYYY-MM-DD.')
     }
 
-    if (!isUpdate && !title) {
-        return sendErrorResponse(res, 400, 'Dados insuficientes, favor preencher título')
+    if (!isUpdate && (!title || title.trim() === '')) {
+        throw new Error('Dados insuficientes, favor preencher título')
     }
-
-    return null;
 }
 
 module.exports = validateTaskInput;

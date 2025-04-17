@@ -5,10 +5,10 @@ const authenticate = require('../middlewares/auth')
 
 router.use(authenticate)
 
-router.post('/', taskController.createTask)
+router.post('/', taskController.postTask)
 router.get('/', taskController.getTasks)
 router.get('/:id', taskController.getTasksById)
-router.put('/:id', taskController.updateTask)
+router.put('/:id', taskController.putTask)
 router.delete('/:id', taskController.deleteTask)
 
 module.exports = router
