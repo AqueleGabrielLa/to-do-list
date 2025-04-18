@@ -1,13 +1,11 @@
 const jwt = require('jsonwebtoken')
+const { sendErrorResponse } = require('../utils/response')
 
 const authenticate = (req, res, next) => {
     const token = req.header('Authorization')
 
     if(!token){
-        return res.status(401).json({
-            success: false,
-            message: 'Token de autorização necessário'
-        })
+        return sendErrorResponse(res, 401, 'Token de autorização necessário')
     }
 
     try{
@@ -16,10 +14,7 @@ const authenticate = (req, res, next) => {
         next()
     } catch (error){
         console.error('Erro ao autenticar usuário', error)
-        res.status(401).json({
-            success: false,
-            message: 'Token inválido'
-        })
+        return sendErrorResponse(res, 401, 'Token inválido')
     }
 }
 
