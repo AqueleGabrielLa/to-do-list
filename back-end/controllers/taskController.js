@@ -34,7 +34,15 @@ const getTasks = async (req, res) => {
 
         const result = await getAllTasks({ userId })
 
-        sendSuccessResponse(res, 200, undefined, result.rows)
+        const tasks = result.rows.map(task => ({
+            ...task,
+            category: task.category_id ? {
+                id: task.category_id,
+                name: task.category_name
+            } : null
+        }))
+
+        sendSuccessResponse(res, 200, undefined, tasks)
     } catch (error) {
         handleError(res, 'Erro ao buscar tarefas', error)
     }

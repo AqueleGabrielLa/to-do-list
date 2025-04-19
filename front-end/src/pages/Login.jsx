@@ -1,9 +1,10 @@
 import { useState } from "react"
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 
 export default function Login() {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
+    const navigate = useNavigate()
 
     const handleSubmit = async (e) => {
         e.preventDefault()
@@ -16,16 +17,16 @@ export default function Login() {
             body: JSON.stringify({ email, password })
         })
 
-        const data = await res.json()
+        const response = await res.json()
         if (!res.ok) {
-            alert(data.message || 'Erro ao fazer login')
+            alert(response.message || 'Erro ao fazer login')
             return
         }
 
-        const token = data.data
-        console.log(token);
+        const { token } = response.data
         
         localStorage.setItem('token', token)
+        navigate('/home')
     }
 
     return(

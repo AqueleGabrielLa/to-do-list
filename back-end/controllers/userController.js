@@ -19,7 +19,7 @@ const login = async (req, res) => {
     try {
         const token = await loginUser(req.body)
 
-        sendSuccessResponse(res, 200, 'Login realizado com sucesso', token)
+        sendSuccessResponse(res, 200, 'Login realizado com sucesso', { token })
     } catch (error) {
         if(error.message === 'Credenciais inválidas')
             sendErrorResponse(res, 401, error.message)
