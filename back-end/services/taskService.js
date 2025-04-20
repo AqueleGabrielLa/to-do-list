@@ -11,9 +11,7 @@ const createTask = async ({ title, description, status, dueDate, userId, categor
 const getAllTasks = async ({ userId }) => {
     const result = await pool.query(
         `
-        SELECT 
-            tasks.*, 
-            categories.name AS category_name
+        SELECT tasks.*, categories.name AS category_name
         FROM tasks
         LEFT JOIN categories ON tasks.category_id = categories.id
         WHERE tasks.user_id = $1

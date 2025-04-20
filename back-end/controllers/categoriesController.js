@@ -22,7 +22,7 @@ const getCategories = async (req, res) => {
         const userId = req.user.id 
         const result = await getAllCategories({ userId })
 
-        sendSuccessResponse(res, 200, null, result.rows)
+        sendSuccessResponse(res, 200, undefined, result.rows)
     } catch (error) {
         handleError(res, 'Erro ao buscar categorias', error)
     }

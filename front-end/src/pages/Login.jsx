@@ -1,37 +1,47 @@
 import { useState } from "react"
 import { Link, useNavigate } from 'react-router-dom'
+import api from "../services/api"
 
 export default function Login() {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
+    const [error, setError] = useState('')
     const navigate = useNavigate()
 
     const handleSubmit = async (e) => {
         e.preventDefault()
 
-        const res = await fetch('http://localhost:3000/user/login', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ email, password })
-        })
+        try {
+            const response = await api.post('/user/login', {
+                email,
+                password
+            })
 
-        const response = await res.json()
-        if (!res.ok) {
-            alert(response.message || 'Erro ao fazer login')
-            return
+            const token = response.data.data.token
+
+            if(token){
+                localStorage.setItem('token', token)
+                setError('')
+                navigate('/home')
+            } else {
+                setError('Token não recebido, tente novamente')
+            }
+        } catch (error) {
+            if(error.response && error.response.data){
+                setError(error.response.data.message)
+            } else {
+                setError('Erro ao fazer login tente novamente')
+            }
         }
 
-        const { token } = response.data
-        
-        localStorage.setItem('token', token)
-        navigate('/home')
     }
 
     return(
         <div>
             <h1>Login</h1>
+
+            {error && <p style={{ color: 'red' }}>{error}</p>}
+
             <form onSubmit={handleSubmit}>
                 <input 
                     type="email"

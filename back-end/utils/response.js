@@ -1,9 +1,14 @@
-function sendSuccessResponse(res, statusCode = 200, message = 'Success', data = {}){
-    return res.status(statusCode).json({
+function sendSuccessResponse(res, statusCode = 200, message = 'Success', data = null){
+    const response = {
         success: true,
-        message,
-        ...data && { data }
-    })
+        message
+    }
+
+    if(data !== null){
+        response.data = data
+    }
+
+    return res.status(statusCode).json(response)
 }
 
 function sendErrorResponse(res, statusCode = 400, message = 'Something went wrong'){

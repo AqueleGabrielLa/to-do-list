@@ -35,11 +35,7 @@ const getTasks = async (req, res) => {
         const result = await getAllTasks({ userId })
 
         const tasks = result.rows.map(task => ({
-            ...task,
-            category: task.category_id ? {
-                id: task.category_id,
-                name: task.category_name
-            } : null
+            ...task
         }))
 
         sendSuccessResponse(res, 200, undefined, tasks)

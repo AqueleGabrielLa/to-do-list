@@ -1,39 +1,47 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import api from '../services/api'
 
 export default function Register() {
     const [name, setName] = useState('')
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
+    const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
 
     const navigate = useNavigate()
 
     const handleSubmit = async (e) => {
         e.preventDefault()
 
-        const res = await fetch('http://localhost:3000/user/register', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ name, email, password })
-        })
+        try {
+            const response = await api.post('/user/register',
+                name,
+                email,
+                password
+            )
 
-        const data = await res.json()
-        console.log(data);
+            setSuccess(response.data.message)
+            setError('')
 
-        if (!res.ok) {
-            alert(data.message || 'Erro ao registrar')
-            return
+            setTimeout(() => navigate('login'), 2000)
+        } catch (error) {
+            if(error.response && error.response.data){
+                setError(error.response.data.message)
+            } else {
+                setError('Erro ao registrar, tente novamente')
+            } 
+            setSuccess('')
         }
-
-        alert('Usuário registrado com sucesso!')
-        navigate('/login')
     }
 
     return(
         <div>
             <h1>Cadastro</h1>
+
+            {success && <p style={{ color: 'green' }}>{success}</p>}
+            {error && <p style={{ color: 'red' }}>{error}</p>}
+
             <form onSubmit={handleSubmit}>
                 <input 
                     type="text"

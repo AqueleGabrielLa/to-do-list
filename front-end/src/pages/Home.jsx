@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import api from "../services/api";
 
 export default function Home(){
     const [tasks, setTasks] = useState([])
@@ -14,58 +15,52 @@ export default function Home(){
             return
         }
 
-        fetchTasks(token)
-        fetchCategories(token)
+        fetchTasks()
+        fetchCategories()
     }, [navigate])
 
-    const fetchTasks = async (token) => {
-        const res = await fetch('http://localhost:3000/tasks', {
-            method: 'GET',
-            headers: { 
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            }
-        })
-
-        const response = await res.json()
-        setTasks(response.data || [])
+    const fetchTasks = async () => {
+        try {
+            const response = await api.get('/tasks')
+            setTasks(response.data.data)
+        } catch (error) {
+            console.error('Erro ao buscar tarefas:', error)
+        }
     }
-
-    const fetchCategories = async (token) => {
-        const res = await fetch('http://localhost:3000/categories', {
-            headers: { Authorization: `Bearer ${token}`}
-        })
-
-        const response = await res.json()
-        setCategories(response.data || [])
+    const fetchCategories = async () => {
+        try{
+            const response = await api.get('/categories')
+            setCategories(response.data.data)
+        } catch (error){
+            console.error('Erro ao buscar categorias:', error)
+        }
     }
 
     const handleCategorySubmit = async (e) => {
         e.preventDefault()
 
-        const token = localStorage.getItem('token')
-        const res = fetch('http://localhost:3000/categories', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ name: categoryName})
-        })
+        if(!categoryName.trim()) return
 
-        const response = await res.json()
-        if(response.success){
-            setCategories((prev) => [...prev, response.data])
+        try {
+            await api.post('/categories', {
+                name: categoryName
+            })
             setCategoryName('')
-        } else {
-            alert('Erro ao criar categoria');
+            fetchCategories()
+        } catch (error) {
+            console.error('Erro ao criar categoria: ', error)
         }
+    }
+
+    const handleLogout = () => {
+        localStorage.removeItem('token')
+        navigate('/login')
     }
 
     return (
         <div>
             <h1>Minhas Tarefas</h1>
-
+            <button onClick={handleLogout}>Sair</button>
             <section>
                 <h2>Criar Categoria</h2>
                 <form onSubmit={handleCategorySubmit}>
@@ -75,7 +70,7 @@ export default function Home(){
                         onChange={(e) => setCategoryName(e.target.value)}
                         placeholder="Nome da Categoria"
                     />
-                    <button type="submit">Criar Categoria</button>
+                    <button type="submit" disabled={!categoryName.trim()}>Criar Categoria</button>
                 </form>
             </section>
 
