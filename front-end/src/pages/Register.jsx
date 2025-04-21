@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import api from '../services/api'
 
+
 export default function Register() {
     const [name, setName] = useState('')
     const [email, setEmail] = useState('')
@@ -15,11 +16,11 @@ export default function Register() {
         e.preventDefault()
 
         try {
-            const response = await api.post('/user/register',
+            const response = await api.post('/user/register', {
                 name,
                 email,
                 password
-            )
+            })
 
             setSuccess(response.data.message)
             setError('')
@@ -36,7 +37,7 @@ export default function Register() {
     }
 
     return(
-        <div>
+        <div className="container">
             <h1>Cadastro</h1>
 
             {success && <p style={{ color: 'green' }}>{success}</p>}

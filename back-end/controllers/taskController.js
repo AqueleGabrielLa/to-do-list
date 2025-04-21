@@ -11,6 +11,8 @@ const validateTaskErrors = new Set([
 
 const postTask = async (req, res) => {
     try {
+        console.log(req.body);
+        
         const { title, description, status, dueDate, categoryId } = req.body;
         const userId = req.user.id
 
@@ -35,7 +37,15 @@ const getTasks = async (req, res) => {
         const result = await getAllTasks({ userId })
 
         const tasks = result.rows.map(task => ({
-            ...task
+            id: task.id,
+            title: task.title,
+            description: task.description,
+            status: task.status,
+            dueDate: task.due_date,
+            category: task.category_id ? {
+                id: task.category_id,
+                name: task.category_name
+            } : null
         }))
 
         sendSuccessResponse(res, 200, undefined, tasks)

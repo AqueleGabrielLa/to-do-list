@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { Link, useNavigate } from 'react-router-dom'
 import api from "../services/api"
+import '../styles/Style.css'
 
 export default function Login() {
     const [email, setEmail] = useState('')
@@ -37,7 +38,7 @@ export default function Login() {
     }
 
     return(
-        <div>
+        <div className="conteiner">
             <h1>Login</h1>
 
             {error && <p style={{ color: 'red' }}>{error}</p>}
